@@ -18,7 +18,7 @@ Certifique-se de ter Python 3 instalado em seu sistema. As demais dependências 
 
 Três rotas;
 
-`/~ -> Página inicial.
+`/` -> Página inicial.
 
 `/admin` -> Para os administradores com acesso Token único.
 

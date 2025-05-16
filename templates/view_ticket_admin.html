@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Detalhes do Ticket #{{ ticket.id }} - Ticket AI Admin</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .status-aberto { background-color: #fef3c7; color: #92400e; }
+        .status-em-andamento { background-color: #dbeafe; color: #1e40af; }
+        .status-resolvido { background-color: #d1fae5; color: #065f46; }
+        .status-fechado { background-color: #e5e7eb; color: #4b5563; }
+        .flash-warning { background-color: #fef9c3; color: #a16207; border-left: 4px solid #facc15; }
+        .whitespace-pre-wrap {
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+        .copy-feedback {
+            display: none;
+            margin-left: 8px;
+            font-size: 0.875rem;
+            color: #10b981; /* green-500 */
+        }
+        .suggestion-container {
+            position: relative;
+        }
+        .action-buttons {
+            /* Os botões de ação são visíveis se houver sugestão válida */
+            display: flex; 
+        }
+         /* Estilo para o spinner (pode ser usado como placeholder visual se a carga for demorada) */
+        .spinner-placeholder {
+            border: 4px solid rgba(0, 0, 0, 0.1);
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            border-left-color: #6d28d9; 
+            animation: spin 1s ease infinite;
+            margin: 20px auto;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body class="bg-gray-100 text-gray-800 flex flex-col min-h-screen">
+
+    <nav class="bg-indigo-700 p-4 shadow-lg sticky top-0 z-50">
+        <div class="container mx-auto flex justify-between items-center">
+            <a href="{{ url_for('admin_dashboard') }}" class="text-white text-2xl font-bold">
+                <i class="fas fa-shield-alt mr-2"></i>Ticket AI - Admin Detalhes
+            </a>
+            <div>
+                <a href="{{ url_for('admin_dashboard') }}" class="text-indigo-100 hover:text-white px-3 py-2 rounded-md text-sm font-medium transition duration-150 ease-in-out">
+                    <i class="fas fa-arrow-left mr-1"></i>Voltar ao Painel
+                </a>
+                <a href="{{ url_for('admin_logout') }}" class="text-indigo-100 hover:text-white bg-red-500 hover:bg-red-600 px-3 py-2 rounded-md text-sm font-medium transition duration-150 ease-in-out">
+                    <i class="fas fa-sign-out-alt mr-1"></i>Logout
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <main class="flex-grow container mx-auto mt-8 mb-8 px-4">
+        <div class="bg-white p-8 rounded-lg shadow-xl max-w-4xl mx-auto">
+            <div class="flex justify-between items-center mb-6 pb-4 border-b border-gray-200">
+                <h1 class="text-3xl font-bold text-gray-700">
+                    <i class="fas fa-ticket-alt mr-2 text-indigo-600"></i>Detalhes do Ticket #{{ ticket.id }}
+                </h1>
+                <span class="px-4 py-1.5 text-sm font-semibold rounded-full
+                    {% if ticket.status == 'Aberto' %} status-aberto
+                    {% elif ticket.status == 'Em Andamento' %} status-em-andamento
+                    {% elif ticket.status == 'Resolvido' %} status-resolvido
+                    {% elif ticket.status == 'Fechado' %} status-fechado
+                    {% else %} bg-gray-200 text-gray-800 {% endif %}">
+                    {{ ticket.status }}
+                </span>
+            </div>
+
+            <div class="my-6">
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% if messages %}
+                        {% for category, message in messages %}
+                            <div class="p-4 mb-4 text-sm rounded-lg shadow
+                                {% if category == 'warning' %} flash-warning {% endif %}"
+                                role="alert">
+                                <i class="fas {% if category == 'warning' %}fa-exclamation-circle{% endif %} mr-2"></i>
+                                {{ message }}
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+                {% endwith %}
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                <div class="md:col-span-1">
+                    <h3 class="text-lg font-semibold text-gray-600 mb-1">Nome do Solicitante:</h3>
+                    <p class="text-gray-800">{{ ticket.name }}</p>
+                </div>
+                <div class="md:col-span-2">
+                    <h3 class="text-lg font-semibold text-gray-600 mb-1">Email:</h3>
+                    <p class="text-gray-800" id="ticketEmail">{{ ticket.email }}</p>
+                </div>
+            </div>
+
+            <div class="mb-6">
+                <h3 class="text-lg font-semibold text-gray-600 mb-1">Assunto:</h3>
+                <p class="text-gray-800 text-xl" id="ticketSubject">{{ ticket.subject }}</p>
+            </div>
+
+            <div class="mb-8">
+                <h3 class="text-lg font-semibold text-gray-600 mb-2">Descrição Completa:</h3>
+                <div class="bg-gray-50 p-4 rounded-md border border-gray-200">
+                    <p class="text-gray-700 whitespace-pre-wrap">{{ ticket.description }}</p>
+                </div>
+            </div>
+
+            <div class="border-t border-gray-200 pt-6">
+                <h2 class="text-2xl font-semibold text-gray-700 mb-4">
+                    <i class="fas fa-robot mr-2 text-purple-600"></i>Assistente IA Gemini
+                </h2>
+                <div class="bg-purple-50 p-6 rounded-lg border border-purple-200 shadow-sm suggestion-container">
+                    
+                    <div id="geminiSuggestionArea">
+                        <h4 id="suggestionTitle" class="text-lg font-semibold text-purple-700 mb-2">Sugestão de Resposta:</h4>
+                        {% if gemini_suggestion == "Carregando sugestão da IA..." %}
+                            <div class="spinner-placeholder"></div>
+                            <p class="text-center text-purple-700 italic mt-2">{{ gemini_suggestion }}</p>
+                        {% else %}
+                            <div id="geminiSuggestionText" class="text-purple-800 whitespace-pre-wrap">
+                                {{- gemini_suggestion.replace('\n', '<br>') | safe if gemini_suggestion else 'Nenhuma sugestão disponível ou erro ao gerar.' -}}
+                            </div>
+                            <p id="suggestionMeta" class="text-xs mt-3">
+                                {% if gemini_suggestion and "Erro ao tentar gerar sugestão" not in gemini_suggestion and "API Gemini não foi configurada" not in gemini_suggestion and "A IA Gemini retornou uma resposta vazia" not in gemini_suggestion and gemini_suggestion != "Carregando sugestão da IA..." %}
+                                    Lembre-se: Esta é uma sugestão gerada por IA. Revise e ajuste.
+                                {% elif "Erro" in gemini_suggestion or "não foi configurada" in gemini_suggestion or "resposta vazia" in gemini_suggestion %}
+                                    <span class="text-red-500">Falha ao carregar sugestão. Verifique os logs do servidor.</span>
+                                {% endif %}
+                            </p>
+                        {% endif %}
+                    </div>
+                    
+                    {% if gemini_suggestion and "Erro" not in gemini_suggestion and "não foi configurada" not in gemini_suggestion and "resposta vazia" not in gemini_suggestion and gemini_suggestion != "Carregando sugestão da IA..." %}
+                    <div id="suggestionActionButtons" class="mt-6 items-center space-x-3 action-buttons">
+                        <button id="copySuggestionBtn" title="Copiar Sugestão"
+                                class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition duration-150 ease-in-out text-sm">
+                            <i class="fas fa-copy mr-1"></i> Copiar
+                        </button>
+                        <button id="emailSuggestionBtn" title="Enviar Sugestão por Email"
+                                class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition duration-150 ease-in-out text-sm">
+                            <i class="fas fa-envelope mr-1"></i> Email
+                        </button>
+                        <a href="{{ url_for('view_ticket', ticket_id=ticket.id) }}" title="Regerar Sugestão"
+                                class="px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition duration-150 ease-in-out text-sm">
+                            <i class="fas fa-sync-alt mr-1"></i> Regerar
+                        </a>
+                        <span id="copyFeedback" class="copy-feedback"><i class="fas fa-check-circle"></i> Copiado!</span>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer class="bg-gray-800 text-white py-8 text-center mt-auto">
+        <div class="container mx-auto">
+            <p>&copy; <script>document.write(new Date().getFullYear())</script> Ticket AI. Todos os direitos reservados.</p>
+        </div>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // A lógica de carregamento assíncrono foi removida.
+            // A sugestão é renderizada diretamente pelo Flask.
+            
+            const copyBtn = document.getElementById('copySuggestionBtn');
+            const emailBtn = document.getElementById('emailSuggestionBtn');
+            const suggestionTextElement = document.getElementById('geminiSuggestionText');
+            const copyFeedback = document.getElementById('copyFeedback');
+
+            let rawSuggestionText = '';
+            if (suggestionTextElement) {
+                // Pega o texto da sugestão renderizada pelo servidor e converte <br> para \n
+                rawSuggestionText = suggestionTextElement.innerHTML
+                                        .replace(/<br\s*\/?>/gi, "\n") // Converte <br> e <br /> para \n
+                                        .replace(/&lt;/g, "<")    // Converte &lt; para <
+                                        .replace(/&gt;/g, ">")    // Converte &gt; para >
+                                        .replace(/&amp;/g, "&")  // Converte &amp; para &
+                                        .trim(); 
+            }
+
+            // Só adiciona listeners se os botões existirem (ou seja, se houver sugestão válida)
+            if (copyBtn && suggestionTextElement && rawSuggestionText && 
+                !rawSuggestionText.includes("Nenhuma sugestão disponível") && 
+                !rawSuggestionText.includes("Erro ao gerar") &&
+                rawSuggestionText !== "Carregando sugestão da IA...") {
+                
+                copyBtn.addEventListener('click', function() {
+                    navigator.clipboard.writeText(rawSuggestionText).then(function() {
+                        copyFeedback.style.display = 'inline';
+                        setTimeout(() => {
+                            copyFeedback.style.display = 'none';
+                        }, 2000);
+                    }).catch(function(err) {
+                        console.error('Erro ao copiar texto: ', err);
+                        alert('Erro ao copiar. Tente manualmente.');
+                    });
+                });
+            }
+
+            if (emailBtn && suggestionTextElement && rawSuggestionText &&
+                !rawSuggestionText.includes("Nenhuma sugestão disponível") && 
+                !rawSuggestionText.includes("Erro ao gerar") &&
+                rawSuggestionText !== "Carregando sugestão da IA...") {
+
+                emailBtn.addEventListener('click', function() {
+                    const ticketEmail = document.getElementById('ticketEmail')?.innerText;
+                    const ticketSubjectText = document.getElementById('ticketSubject')?.innerText;
+                    
+                    if (!ticketEmail) {
+                        alert('Email do solicitante não encontrado.');
+                        return;
+                    }
+
+                    const subject = encodeURIComponent(`Re: Ticket #${'{{ ticket.id }}'} - ${ticketSubjectText || 'Suporte'}`);
+                    const body = encodeURIComponent(rawSuggestionText);
+                    
+                    window.location.href = `mailto:${ticketEmail}?subject=${subject}&body=${body}`;
+                });
+            }
+        });
+    </script>
+</body>
+</html>

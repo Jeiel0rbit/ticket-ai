@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bem-vindo ao Ticket AI</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .hero-bg {
+            background-image: url('https://placehold.co/1200x600/6366F1/FFFFFF?text=Ticket+AI+Sistema+de+Suporte');
+            background-size: cover;
+            background-position: center;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 text-gray-800">
+    <nav class="bg-indigo-600 p-4 shadow-lg sticky top-0 z-50">
+        <div class="container mx-auto flex justify-between items-center">
+            <a href="{{ url_for('index') }}" class="text-white text-2xl font-bold">
+                <i class="fas fa-ticket-alt mr-2"></i>Ticket AI
+            </a>
+            <div>
+                <a href="{{ url_for('create_ticket') }}" class="text-indigo-100 hover:text-white px-3 py-2 rounded-md text-sm font-medium transition duration-150 ease-in-out">
+                    <i class="fas fa-plus-circle mr-1"></i>Criar Ticket
+                </a>
+                <a href="{{ url_for('admin_dashboard') }}" class="text-indigo-100 hover:text-white px-3 py-2 rounded-md text-sm font-medium transition duration-150 ease-in-out">
+                    <i class="fas fa-user-shield mr-1"></i>Painel Admin
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <header class="hero-bg text-white">
+        <div class="container mx-auto text-center py-20 md:py-32 bg-black bg-opacity-60">
+            <h1 class="text-4xl md:text-6xl font-bold mb-6">Bem-vindo ao Ticket AI</h1>
+            <p class="text-lg md:text-xl mb-8 max-w-2xl mx-auto px-4">
+                Sua solução inteligente para gerenciamento de tickets de suporte, com o poder da IA para respostas rápidas e eficientes.
+            </p>
+            <div class="space-y-4 md:space-y-0 md:space-x-4 px-4">
+                <a href="{{ url_for('create_ticket') }}" class="w-full md:w-auto inline-block bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-8 rounded-lg text-lg transition duration-150 ease-in-out shadow-md hover:shadow-lg">
+                    <i class="fas fa-file-alt mr-2"></i>Abrir um Novo Ticket
+                </a>
+                <a href="{{ url_for('admin_dashboard') }}" class="w-full md:w-auto inline-block bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-8 rounded-lg text-lg transition duration-150 ease-in-out shadow-md hover:shadow-lg">
+                    <i class="fas fa-tachometer-alt mr-2"></i>Acessar Painel Admin
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <section class="py-16 bg-white">
+        <div class="container mx-auto px-6">
+            <h2 class="text-3xl font-bold text-center text-gray-800 mb-12">Funcionalidades Principais</h2>
+            <div class="grid md:grid-cols-3 gap-8">
+                <div class="bg-gray-50 p-8 rounded-lg shadow-lg hover:shadow-xl transition-shadow duration-300">
+                    <div class="text-indigo-600 text-4xl mb-4 text-center"><i class="fas fa-ticket-alt"></i></div>
+                    <h3 class="text-xl font-semibold mb-3 text-center">Criação Fácil de Tickets</h3>
+                    <p class="text-gray-600 text-center">Usuários podem criar tickets de forma rápida e intuitiva através de uma interface simples.</p>
+                </div>
+                <div class="bg-gray-50 p-8 rounded-lg shadow-lg hover:shadow-xl transition-shadow duration-300">
+                    <div class="text-indigo-600 text-4xl mb-4 text-center"><i class="fas fa-user-shield"></i></div>
+                    <h3 class="text-xl font-semibold mb-3 text-center">Painel de Administrador Seguro</h3>
+                    <p class="text-gray-600 text-center">Acesso restrito ao painel de administração com token para visualização e gerenciamento de tickets.</p>
+                </div>
+                <div class="bg-gray-50 p-8 rounded-lg shadow-lg hover:shadow-xl transition-shadow duration-300">
+                    <div class="text-indigo-600 text-4xl mb-4 text-center"><i class="fas fa-robot"></i></div>
+                    <h3 class="text-xl font-semibold mb-3 text-center">Assistência com IA Gemini</h3>
+                    <p class="text-gray-600 text-center">O administrador recebe sugestões geradas por IA para auxiliar na resolução dos tickets.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer class="bg-gray-800 text-white py-8 text-center">
+        <div class="container mx-auto">
+            <p>&copy; <script>document.write(new Date().getFullYear())</script> Ticket AI. Todos os direitos reservados.</p>
+            <p class="text-sm text-gray-400">Desenvolvido com Flask e Tailwind CSS.</p>
+        </div>
+    </footer>
+
+</body>
+</html>

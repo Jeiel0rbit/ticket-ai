@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel Administrador - Ticket AI</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .status-aberto { background-color: #fef3c7; color: #92400e; border-left: 4px solid #f59e0b; }
+        .status-em-andamento { background-color: #dbeafe; color: #1e40af; border-left: 4px solid #3b82f6; }
+        .status-resolvido { background-color: #d1fae5; color: #065f46; border-left: 4px solid #10b981; }
+        .status-fechado { background-color: #e5e7eb; color: #4b5563; border-left: 4px solid #6b7280; }
+        .modal { transition: opacity 0.25s ease; }
+        .modal-active { overflow-x: hidden; overflow-y: auto; }
+        .flash-success { background-color: #dcfce7; color: #166534; border-left: 4px solid #22c55e; }
+        .flash-danger { background-color: #fee2e2; color: #991b1b; border-left: 4px solid #ef4444; }
+        .flash-info { background-color: #e0f2fe; color: #0369a1; border-left: 4px solid #0ea5e9; }
+        .flash-warning { background-color: #fef9c3; color: #a16207; border-left: 4px solid #facc15; }
+        /* Estilo para feedback de carregamento */
+        #loadingIndicator {
+            display: none; /* Começa escondido */
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background-color: #1f2937; /* bg-gray-800 */
+            color: white;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 0.875rem; /* text-sm */
+            z-index: 100;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06);
+        }
+    </style>
+</head>
+<body class="bg-gray-100 text-gray-800 flex flex-col min-h-screen">
+
+    <nav class="bg-indigo-700 p-4 shadow-lg sticky top-0 z-50">
+        <div class="container mx-auto flex justify-between items-center">
+            <a href="{{ url_for('index') }}" class="text-white text-2xl font-bold">
+                <i class="fas fa-shield-alt mr-2"></i>Ticket AI - Admin
+            </a>
+            <div>
+                <a href="{{ url_for('index') }}" class="text-indigo-100 hover:text-white px-3 py-2 rounded-md text-sm font-medium transition duration-150 ease-in-out">
+                    <i class="fas fa-home mr-1"></i>Página Inicial
+                </a>
+                 <a href="{{ url_for('create_ticket') }}" class="text-indigo-100 hover:text-white px-3 py-2 rounded-md text-sm font-medium transition duration-150 ease-in-out">
+                    <i class="fas fa-plus-circle mr-1"></i>Novo Ticket
+                </a>
+                <a href="{{ url_for('admin_logout') }}" class="text-indigo-100 hover:text-white bg-red-500 hover:bg-red-600 px-3 py-2 rounded-md text-sm font-medium transition duration-150 ease-in-out">
+                    <i class="fas fa-sign-out-alt mr-1"></i>Logout
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <main class="flex-grow container mx-auto mt-8 mb-8 px-4">
+        <h1 class="text-3xl font-bold text-gray-700 mb-6">
+            <i class="fas fa-tasks mr-2 text-indigo-600"></i>Gerenciamento de Tickets
+            <span id="lastUpdated" class="text-sm font-normal text-gray-500 ml-2"></span>
+        </h1>
+
+        <div class="my-6" id="flashMessagesContainer">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="p-4 mb-4 text-sm rounded-lg shadow
+                            {% if category == 'success' %} flash-success {% endif %}
+                            {% if category == 'danger' %} flash-danger {% endif %}
+                            {% if category == 'info' %} flash-info {% endif %}
+                            {% if category == 'warning' %} flash-warning {% endif %}"
+                            role="alert">
+                            <i class="fas {% if category == 'success' %}fa-check-circle{% elif category == 'danger' %}fa-exclamation-triangle{% elif category == 'info' %}fa-info-circle{% elif category == 'warning' %}fa-exclamation-circle{% endif %} mr-2"></i>
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+        </div>
+
+        <div id="ticketsContainer" class="bg-white shadow-xl rounded-lg overflow-x-auto">
+            <table class="min-w-full leading-normal">
+                <thead class="bg-gray-200 text-gray-600 uppercase text-sm">
+                    <tr>
+                        <th class="px-5 py-3 border-b-2 border-gray-300 text-left">ID</th>
+                        <th class="px-5 py-3 border-b-2 border-gray-300 text-left">Nome</th>
+                        <th class="px-5 py-3 border-b-2 border-gray-300 text-left">Email</th>
+                        <th class="px-5 py-3 border-b-2 border-gray-300 text-left">Assunto</th>
+                        <th class="px-5 py-3 border-b-2 border-gray-300 text-left">Status</th>
+                        <th class="px-5 py-3 border-b-2 border-gray-300 text-center">Ações</th>
+                    </tr>
+                </thead>
+                <tbody id="ticketsTableBody" class="text-gray-700">
+                    {% if not tickets %}
+                    <tr id="noTicketsRow">
+                        <td colspan="6" class="text-center py-10">
+                            <div class="bg-blue-100 border-l-4 border-blue-500 text-blue-700 p-6 rounded-md shadow-md inline-block" role="alert">
+                                <div class="flex items-center">
+                                    <div class="py-1"><i class="fas fa-info-circle fa-2x mr-3"></i></div>
+                                    <div>
+                                        <p class="font-bold text-xl">Nenhum ticket encontrado!</p>
+                                        <p class="text-md">Aguardando novos tickets ou atualizando...</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </main>
+
+    <div id="statusModal" class="modal fixed w-full h-full top-0 left-0 flex items-center justify-center hidden z-50">
+        <div class="modal-overlay absolute w-full h-full bg-gray-900 opacity-50"></div>
+        <div class="modal-container bg-white w-11/12 md:max-w-md mx-auto rounded-lg shadow-xl z-50 overflow-y-auto">
+            <div class="modal-content py-4 text-left px-6">
+                <div class="flex justify-between items-center pb-3">
+                    <p class="text-2xl font-bold text-gray-700">Mudar Status do Ticket <span id="modalTicketId" class="text-indigo-600"></span></p>
+                    <button class="modal-close cursor-pointer z-50" onclick="closeStatusModal()">
+                        <i class="fas fa-times text-gray-500 hover:text-gray-700 text-2xl"></i>
+                    </button>
+                </div>
+                <form id="statusForm" method="POST"> <div class="mb-4">
+                        <label for="statusSelect" class="block text-sm font-medium text-gray-700 mb-1">Novo Status:</label>
+                        <select id="statusSelect" name="status" class="mt-1 block w-full px-3 py-2 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                            <option value="Aberto">Aberto</option>
+                            <option value="Em Andamento">Em Andamento</option>
+                            <option value="Resolvido">Resolvido</option>
+                            <option value="Fechado">Fechado</option>
+                        </select>
+                    </div>
+                    <div class="flex justify-end pt-2 space-x-2">
+                        <button type="button" onclick="closeStatusModal()"
+                                class="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 transition duration-150 ease-in-out">
+                            Cancelar
+                        </button>
+                        <button type="submit"
+                                class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition duration-150 ease-in-out">
+                            <i class="fas fa-save mr-1"></i> Salvar Alterações
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div id="loadingIndicator">
+        <i class="fas fa-spinner fa-spin mr-2"></i>Atualizando tickets...
+    </div>
+
+    <footer class="bg-gray-800 text-white py-8 text-center mt-auto">
+        <div class="container mx-auto">
+            <p>&copy; <script>document.write(new Date().getFullYear())</script> Ticket AI. Todos os direitos reservados.</p>
+        </div>
+    </footer>
+
+    <script>
+        const statusModal = document.getElementById('statusModal');
+        const statusForm = document.getElementById('statusForm');
+        const modalTicketIdSpan = document.getElementById('modalTicketId');
+        const statusSelect = document.getElementById('statusSelect');
+        const ticketsTableBody = document.getElementById('ticketsTableBody');
+        const loadingIndicator = document.getElementById('loadingIndicator');
+        const lastUpdatedSpan = document.getElementById('lastUpdated');
+
+        function openStatusModal(ticketId, currentStatus) {
+            modalTicketIdSpan.textContent = `#${ticketId}`;
+            // A URL para update_status é /admin/ticket/update_status/<ticket_id>
+            statusForm.action = `/admin/ticket/update_status/${ticketId}`; 
+            statusSelect.value = currentStatus;
+            statusModal.classList.remove('hidden');
+            statusModal.classList.add('modal-active');
+            document.body.classList.add('modal-active');
+        }
+
+        function closeStatusModal() {
+            statusModal.classList.add('hidden');
+            statusModal.classList.remove('modal-active');
+            document.body.classList.remove('modal-active');
+        }
+        
+        function getStatusClass(status) {
+            if (status === 'Aberto') return 'status-aberto';
+            if (status === 'Em Andamento') return 'status-em-andamento';
+            if (status === 'Resolvido') return 'status-resolvido';
+            if (status === 'Fechado') return 'status-fechado';
+            return 'bg-gray-200 text-gray-800'; // Default
+        }
+
+        function renderTickets(tickets) {
+            ticketsTableBody.innerHTML = ''; // Limpa a tabela atual
+
+            if (tickets.length === 0) {
+                ticketsTableBody.innerHTML = `
+                    <tr id="noTicketsRow">
+                        <td colspan="6" class="text-center py-10">
+                            <div class="bg-blue-100 border-l-4 border-blue-500 text-blue-700 p-6 rounded-md shadow-md inline-block" role="alert">
+                                <div class="flex items-center">
+                                    <div class="py-1"><i class="fas fa-info-circle fa-2x mr-3"></i></div>
+                                    <div>
+                                        <p class="font-bold text-xl">Nenhum ticket encontrado!</p>
+                                        <p class="text-md">Aguardando novos tickets...</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>`;
+                return;
+            }
+
+            tickets.forEach(ticket => {
+                const row = document.createElement('tr');
+                row.classList.add('hover:bg-gray-50', 'border-b', 'border-gray-200');
+                row.innerHTML = `
+                    <td class="px-5 py-4 text-sm">#${ticket.id}</td>
+                    <td class="px-5 py-4 text-sm">${ticket.name}</td>
+                    <td class="px-5 py-4 text-sm">${ticket.email}</td>
+                    <td class="px-5 py-4 text-sm">${ticket.subject}</td>
+                    <td class="px-5 py-4 text-sm">
+                        <span class="px-3 py-1 text-xs font-semibold rounded-full ${getStatusClass(ticket.status)}">
+                            ${ticket.status}
+                        </span>
+                    </td>
+                    <td class="px-5 py-4 text-sm text-center whitespace-nowrap">
+                        <a href="${ticket.view_url}"
+                           class="text-indigo-600 hover:text-indigo-900 mr-3 transition duration-150 ease-in-out" title="Ver Detalhes e IA">
+                           <i class="fas fa-eye"></i> Ver
+                        </a>
+                        <button type="button" class="change-status-btn text-blue-600 hover:text-blue-900 transition duration-150 ease-in-out"
+                                data-ticket-id="${ticket.id}"
+                                data-ticket-status="${escapeHtml(ticket.status)}"
+                                title="Mudar Status">
+                           <i class="fas fa-edit"></i> Status
+                        </button>
+                    </td>
+                `;
+                ticketsTableBody.appendChild(row);
+            });
+        }
+
+        function escapeHtml(unsafe) {
+            if (unsafe === null || unsafe === undefined) return '';
+            return unsafe
+                 .toString()
+                 .replace(/&/g, "&amp;")
+                 .replace(/</g, "&lt;")
+                 .replace(/>/g, "&gt;")
+                 .replace(/"/g, "&quot;")
+                 .replace(/'/g, "&#039;");
+        }
+
+
+        async function fetchTickets() {
+            loadingIndicator.style.display = 'flex'; // Mostra o indicador
+            try {
+                const response = await fetch('/api/tickets');
+                if (!response.ok) {
+                    if (response.status === 401) {
+                        // Se não autorizado, pode ser que a sessão expirou.
+                        // Redirecionar para login ou mostrar mensagem.
+                        console.warn('Não autorizado a buscar tickets. Sessão pode ter expirado.');
+                        // window.location.href = "{{ url_for('admin_dashboard') }}"; // Força recarregamento para login
+                        // Por enquanto, apenas paramos de tentar para evitar loops de erro
+                        clearInterval(ticketUpdateInterval); 
+                        loadingIndicator.style.display = 'none';
+                        lastUpdatedSpan.textContent = `Erro ao atualizar: Não autorizado.`;
+                        return;
+                    }
+                    throw new Error(`Erro HTTP: ${response.status}`);
+                }
+                const tickets = await response.json();
+                renderTickets(tickets);
+                const now = new Date();
+                lastUpdatedSpan.textContent = `Atualizado às ${now.toLocaleTimeString()}`;
+            } catch (error) {
+                console.error('Erro ao buscar tickets:', error);
+                lastUpdatedSpan.textContent = `Erro ao atualizar.`;
+            } finally {
+                loadingIndicator.style.display = 'none'; // Esconde o indicador
+            }
+        }
+
+        // Delegação de evento para os botões de status
+        document.addEventListener('click', function(event) {
+            if (event.target.closest('.change-status-btn')) {
+                const button = event.target.closest('.change-status-btn');
+                const ticketId = button.dataset.ticketId;
+                const ticketStatus = button.dataset.ticketStatus;
+                openStatusModal(ticketId, ticketStatus);
+            }
+        });
+        
+        const modalOverlay = document.querySelector('.modal-overlay');
+        if (modalOverlay) {
+            modalOverlay.addEventListener('click', closeStatusModal);
+        }
+        document.addEventListener('keydown', function(event) {
+            if (event.key === "Escape") {
+                closeStatusModal();
+            }
+        });
+
+        // Carrega os tickets inicialmente e depois a cada 5 segundos
+        fetchTickets(); // Carga inicial
+        const ticketUpdateInterval = setInterval(fetchTickets, 5000); // Atualiza a cada 5 segundos
+
+    </script>
+</body>
+</html>

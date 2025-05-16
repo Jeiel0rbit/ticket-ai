@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Página Não Encontrada - Ticket AI</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+    </style>
+</head>
+<body class="bg-gray-100 text-gray-800 flex flex-col min-h-screen">
+
+    <nav class="bg-indigo-600 p-4 shadow-lg">
+        <div class="container mx-auto flex justify-start items-center">
+            <a href="{{ url_for('index') }}" class="text-white text-2xl font-bold">
+                <i class="fas fa-ticket-alt mr-2"></i>Ticket AI
+            </a>
+        </div>
+    </nav>
+
+    <main class="flex-grow container mx-auto mt-10 mb-10 px-4 flex flex-col items-center justify-center text-center">
+        <div class="bg-white p-12 rounded-lg shadow-xl max-w-lg mx-auto">
+            <i class="fas fa-exclamation-triangle fa-5x text-yellow-500 mb-6"></i>
+            <h1 class="text-5xl font-bold text-gray-700 mb-4">Erro 404</h1>
+            <p class="text-xl text-gray-600 mb-8">Oops! A página que você está procurando não foi encontrada.</p>
+            <p class="text-gray-500 mb-8">
+                Parece que o link que você seguiu está quebrado ou a página foi removida.
+            </p>
+            <a href="{{ url_for('index') }}"
+               class="px-6 py-3 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition duration-150 ease-in-out text-lg">
+                <i class="fas fa-home mr-2"></i>Voltar para a Página Inicial
+            </a>
+        </div>
+    </main>
+
+    <footer class="bg-gray-800 text-white py-8 text-center mt-auto">
+        <div class="container mx-auto">
+            <p>&copy; <script>document.write(new Date().getFullYear())</script> Ticket AI. Todos os direitos reservados.</p>
+        </div>
+    </footer>
+
+</body>
+</html>

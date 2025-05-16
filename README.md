@@ -31,11 +31,17 @@ Isso facilita o tempo de resposta que um ser humano precisava para resolver um p
 IA usada do Gemini é o modelo `gemini-1.5-flash-latest`. Rápido e eficiente.
 
 > [!warning]
-> Observação, no arquivo `main.py` deve ser alterado a API KEY na linha 18. 
+> Observação, no arquivo `main.py` deve ser alterado a API KEY na linha 18.
+> 
 > `GEMINI_API_KEY = "AIzaSyA....." # Sua chave API mais recente`
+> 
 > Obtenha em: https://aistudio.google.com/app/apikey
+> 
 > Substitua o token na linha 11 no arquivo `main.py` e não compartilhe.
+> 
 > `ADMIN_TOKEN = "seu-token-super-secreto-123"`
 
-Agora veja algumas imagens:
+Agora veja algumas imagens/gif:
 
+![demoai](https://github.com/user-attachments/assets/8afe3db3-c979-4921-8199-6480f68cce02)
+> 2 min.

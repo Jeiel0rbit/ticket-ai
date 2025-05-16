@@ -18,11 +18,15 @@ Certifique-se de ter Python 3 instalado em seu sistema. As demais dependências 
 
 Três rotas;
 
-/ -> Página inicial.
-/admin -> Para os administradores com acesso Token único.
-/admin/ticket -> Tickets abertos com geração de resposta Gemini AI.
-/admin/ticket/$numero -> Sessão do ticket aberto.
-/ticket -> Para usuários que abriram um ticket.
+`/~ -> Página inicial.
+
+`/admin` -> Para os administradores com acesso Token único.
+
+`/admin/ticket` -> Tickets abertos com geração de resposta Gemini AI.
+
+`/admin/ticket/$numero` -> Sessão do ticket aberto.
+
+`/ticket` -> Para usuários que abriram um ticket.
 
 Imagine um usuário que tem algum problema referente aplicação da plataforma criada por um Xdev. Após o usuário ter criado um ticket, um administrador poderá checar esse problema, feedback ou dúvida. Gemini irá gerar uma resposta pré-definida para o usuário a ser enviado para o e-mail. 
 Isso facilita o tempo de resposta que um ser humano precisava para resolver um problema. Além de não interferir ação de outro administrador, por causa do status definido de cada caso.

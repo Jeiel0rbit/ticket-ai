@@ -1,3 +1,6 @@
+[![Ticket-ai | Flask + Gemini AI + Nix](https://img.youtube.com/vi/FdNHUZUgU-A/0.jpg)](https://www.youtube.com/watch?v=FdNHUZUgU-A)
+> YouTube Short - Demonstração. 
+
 ## Sobre o projeto
 
 Este projeto se chama **Ticket AI**, capacidade de rodar servidor flask local com Gemini para resolução de problemas de usuários que abrirem um ticket, um chamado. Ótimo para pequenas equipes. Rastreamento e otimização com assistente Gemini AI.
